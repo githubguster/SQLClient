@@ -1,6 +1,15 @@
-SQLClient
+# SQLClient
 =========
+apt install libboost-dev
 
-Reference
+# mysql 
+=========
+apt install libmysqlclient-dev 
+
+# postgresql
+=========
+apt-get install libpq-dev postgresql-server-dev-all
+
+# Reference
 =========
 https://github.com/bskari/mysql-cpp

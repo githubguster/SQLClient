@@ -1,11 +1,11 @@
 /**
  * author: guster
- * date: 2021/06/26
- * description: mysql management
+ * date: 2021/07/07
+ * description: postgresql management
  */
 
-#ifndef __MY_SQL_MANAGEMENT__
-#define __MY_SQL_MANAGEMENT__
+#ifndef __POSTGRE_SQL_MANAGEMENT__
+#define __POSTGRE_SQL_MANAGEMENT__
 
 #include <iostream>
 #include <string>
@@ -13,22 +13,22 @@
 #include <algorithm>
 #include <list>
 #include <pthread.h>
-#include <mysql/mysql.h>
-#include "MySQLClient.hpp"
+#include <postgresql/libpq-fe.h>
+#include "PostgreSQLClient.hpp"
 
 using namespace std;
 
 namespace ODBC
 {
-    class MySQLManagementDB : public SQLManagementDB<MySQLClient>
+    class PostgreManagementDB : public SQLManagementDB<PostgreSQLClient>
     {
     private:
         const float ERROR_VERSION = -1;
         static bool MUTEX_IS_INIT;
         static pthread_mutex_t MUTEX;
         static bool IS_INIT;
-        const string CREATE_TABLE = NAME + " nvarchar(255) BINARY , "  +
-                                    VERSION + " float ";
+        const string CREATE_TABLE = NAME + " varchar(255) , "  +
+                                    VERSION + " float4 ";
         static list<SQLManagement> MANAGEMENTS;
     protected:
         void init();
@@ -38,9 +38,9 @@ namespace ODBC
         uint64_t remove(string name);
         SQLManagement get(string name);
     public:
-        MySQLManagementDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error = nullptr);
-        MySQLManagementDB(MySQLClient *db);
-        virtual ~MySQLManagementDB();
+        PostgreManagementDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error = nullptr);
+        PostgreManagementDB(PostgreSQLClient *db);
+        virtual ~PostgreManagementDB();
 
         virtual SQLManagement table_info() = 0;
         virtual bool create_table() = 0;

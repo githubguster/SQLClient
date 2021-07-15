@@ -2,8 +2,8 @@
 
 using namespace ODBC;
 
-MySQLClient::MySQLClient(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name)
-             :SQLClient(server_ip, server_port, user_name, user_password, database_name),
+MySQLClient::MySQLClient(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error)
+             :SQLClient(server_ip, server_port, user_name, user_password, database_name, error),
              mysql(mysql_init(nullptr)),
              connected(false)
 {
@@ -22,7 +22,7 @@ bool MySQLClient::open()
 
 bool MySQLClient::open(string source)
 {
-    bool ret = false;
+    bool ret = true;
     this->close();
     this->connected = (mysql_real_connect(this->mysql, this->server_ip.c_str(), this->user_name.c_str(), this->user_password.c_str(), this->database_name.c_str(), this->server_port, nullptr, 0) != nullptr);
     if(!this->isOpen())
@@ -31,6 +31,7 @@ bool MySQLClient::open(string source)
         {
             this->error(SQLException(mysql_error(this->mysql)));
         }
+        ret = false;
     }
     return ret;
 }
@@ -195,7 +196,7 @@ uint64_t MySQLClient::insert(string table, string columns, string values, Prepar
     uint64_t ret = 0;
     if(this->isOpen())
     {
-        string sql = "INSERT INTO " + table + " ( " + columns + " ) VALUES (" + values + " )" ;
+        string sql = "INSERT INTO " + table + " ( " + columns + " ) VALUES ( " + values + " )" ;
         ret = this->query(sql, command);
     }
     return ret;

@@ -46,12 +46,14 @@ namespace ODBC
         const string TABLE = "Sys_DB_Management";
         const string NAME = "management_name";
         const string VERSION = "management_version";
-
+    public:
+        typedef function<void(SQLException e)> SQLError;
     protected:
         bool is_auto_close;
         DB *db;
+        SQLError error;
     public:
-        SQLManagementDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name) 
+        SQLManagementDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error = nullptr) 
                         :db(nullptr),
                         is_auto_close(true) {}
         SQLManagementDB(DB *db)
@@ -84,8 +86,10 @@ namespace ODBC
     class ParameterSetter
     {
     public:
-        static void SetParameter(H* const parameters, vector<char> * const buffer, my_bool* const is_null_flag) {}
+        static void SetParameter(H* const parameters, vector<char> * const buffer, bool* const is_null_flag) {}
     };
+
+    template<int I> struct ResultCount {};
 
     template<typename H, typename T>
     class ResultSetter
@@ -108,12 +112,15 @@ namespace ODBC
         string database_name;
         SQLError error;
     public:
-        SQLClient(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name)
+        SQLClient(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error = nullptr)
                 :server_ip(server_ip),
                 server_port(server_port),
                 user_name(user_name),
                 user_password(user_password),
-                database_name(database_name) {}
+                database_name(database_name) 
+        {
+            set_error(error);
+        }
 
         virtual ~SQLClient()
         {
@@ -122,6 +129,7 @@ namespace ODBC
             user_name.clear();
             user_password.clear();
             database_name.clear();
+            set_error(nullptr);
         }
 
         void set_error(SQLError error)
@@ -143,7 +151,7 @@ namespace ODBC
         virtual uint64_t add_table_column(string table, string column, string type, PrepareStatement command = nullptr) = 0;
         virtual uint64_t alter_table_column(string table, string column, string type, PrepareStatement command = nullptr) = 0;
         virtual uint64_t drop_table_column(string table, string column, PrepareStatement command = nullptr) = 0;
-
+        
         virtual string escape_string(string value) = 0;
     };
 } 

@@ -1,33 +1,33 @@
-#include "UserDB.hpp"
+#ifdef ENABLE_POSTGRESQL
+#include "PostgreSQLUserDB.hpp"
 
-using namespace Test;
+using namespace Test_PostgreSQL;
 
 const string UserDB::TABLE = "Test_User_DB";
 const string UserDB::ID = "user_id";
 const string UserDB::ACCOUNT = "user_account";
 
-const string UserDB::CREATE_TABLE = UserDB::ID + " bigint NOT NULL AUTO_INCREMENT , " +
-                                    UserDB::ACCOUNT + " nvarchar(255) BINARY NOT NULL , " +
+const string UserDB::CREATE_TABLE = UserDB::ID + " BIGSERIAL NOT NULL , " +
+                                    UserDB::ACCOUNT + " varchar(255) NOT NULL , " +
                                     "PRIMARY KEY (" + UserDB::ID + ") , " +
                                     "UNIQUE (" + UserDB::ACCOUNT + ")";
 const float UserDB::VERSION = 1.0F;
 
 typedef tuple<uint64_t, string> _UserTuple;
 
-UserDB::UserDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name)
-              :MySQLManagementDB(server_ip, server_port, user_name, user_password, database_name) 
+UserDB::UserDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error)
+              :PostgreManagementDB(server_ip, server_port, user_name, user_password, database_name, error) 
 {
     this->init();
 }
-UserDB::UserDB(MySQLClient *db)
-        :MySQLManagementDB(db) 
+UserDB::UserDB(PostgreSQLClient *db)
+        :PostgreManagementDB(db) 
 {
     this->init();
 }
 
 UserDB::~UserDB() 
 {
-
 }
 
 uint64_t UserDB::add(User user)
@@ -38,8 +38,8 @@ uint64_t UserDB::add(User user)
 
     ret = this->db->insert(TABLE,
                             ACCOUNT,
-                            " ? ",
-                            [&](MySQLBind *bind)
+                            " $1 ",
+                            [&](PostgreSQLBind *bind)
                             {
                                 bind->bind_param(account);
                             });
@@ -54,9 +54,9 @@ uint64_t UserDB::update(User user)
     string account = this->db->escape_string(user.getAccount());
 
     ret = this->db->update(TABLE,
-                            ACCOUNT + " = ? ",
-                            ID + " = ? ",
-                            [&](MySQLBind *bind)
+                            ACCOUNT + " = $1 ",
+                            ID + " = $2 ",
+                            [&](PostgreSQLBind *bind)
                             {
                                 bind->bind_param(account, id);
                             });
@@ -71,8 +71,8 @@ uint64_t UserDB::remove(User user)
     string account = this->db->escape_string(user.getAccount());
 
     ret = this->db->remove(TABLE,
-                            ID + " = ?",
-                            [&](MySQLBind *bind)
+                            ID + " = $1 ",
+                            [&](PostgreSQLBind *bind)
                             {
                                 bind->bind_param(id);
                             });
@@ -82,13 +82,13 @@ uint64_t UserDB::remove(User user)
 vector<User> UserDB::getAll()
 {
     vector<User> ret;
-    shared_ptr<MySQLResult> reader = this->db->select(TABLE,
-                                                        ID + " , " + ACCOUNT,
-                                                        "",
-                                                        "",
-                                                        "",
-                                                        "",
-                                                        "");
+    shared_ptr<PostgreSQLResult> reader = this->db->select(TABLE,
+                                                            ID + " , " + ACCOUNT,
+                                                            "",
+                                                            "",
+                                                            "",
+                                                            "",
+                                                            "");
 
     if(reader != nullptr)
     {
@@ -110,6 +110,7 @@ bool UserDB::drop()
 {
     bool ret = true;
     this->db->drop_table(TABLE);
+    PostgreManagementDB::remove(TABLE);
     return ret;
 }
 
@@ -127,3 +128,4 @@ bool UserDB::update_table(float version)
 {
     return true;
 }
+#endif

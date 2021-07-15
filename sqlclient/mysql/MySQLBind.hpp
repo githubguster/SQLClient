@@ -10,8 +10,8 @@
 #include <iostream>
 #include <string>
 #include <cstring>
-#include <mysql/mysql.h>
 #include <vector>
+#include <mysql/mysql.h>
 
 using namespace std;
 
@@ -37,6 +37,10 @@ namespace ODBC
     public:
         static void BIND(vector<MYSQL_BIND>* const binds, const char* const& value, const Args&... args)
         {
+            if(binds->size() <= N)
+            {
+                binds->push_back(MYSQL_BIND());
+            }
             MYSQL_BIND &parameter = binds->at(N);
             memset(&parameter, 0, sizeof(MYSQL_BIND));
             parameter.buffer_type = MYSQL_TYPE_STRING;
@@ -69,13 +73,17 @@ namespace ODBC
         }
     };
 
-    #define BINDER_INTERGAL_TYPE_SPECIALIZATION(type, mysql_type, is_unsigned_type) \
+    #define MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(type, mysql_type, is_unsigned_type) \
     template <size_t N, typename... Args> \
     class Binder<MYSQL_BIND, N, type, Args...> \
     {\
     public:\
         static void BIND(vector<MYSQL_BIND>* const binds, const type& value, const Args&... args) \
         {\
+            if(binds->size() <= N) \
+            { \
+                binds->push_back(MYSQL_BIND()); \
+            } \
             MYSQL_BIND &parameter = binds->at(N); \
             memset(&parameter, 0, sizeof(MYSQL_BIND)); \
             parameter.buffer_type = mysql_type; \
@@ -86,22 +94,26 @@ namespace ODBC
         }\
     };
 
-    BINDER_INTERGAL_TYPE_SPECIALIZATION(int8_t, MYSQL_TYPE_TINY, false)
-    BINDER_INTERGAL_TYPE_SPECIALIZATION(uint8_t, MYSQL_TYPE_TINY, true)
-    BINDER_INTERGAL_TYPE_SPECIALIZATION(int16_t, MYSQL_TYPE_SHORT, false)
-    BINDER_INTERGAL_TYPE_SPECIALIZATION(uint16_t, MYSQL_TYPE_SHORT, true)
-    BINDER_INTERGAL_TYPE_SPECIALIZATION(int32_t, MYSQL_TYPE_LONG, false)
-    BINDER_INTERGAL_TYPE_SPECIALIZATION(uint32_t, MYSQL_TYPE_LONG, true)
-    BINDER_INTERGAL_TYPE_SPECIALIZATION(int64_t, MYSQL_TYPE_LONGLONG, false)
-    BINDER_INTERGAL_TYPE_SPECIALIZATION(uint64_t, MYSQL_TYPE_LONGLONG, true)
+    MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(int8_t, MYSQL_TYPE_TINY, false)
+    MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(uint8_t, MYSQL_TYPE_TINY, true)
+    MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(int16_t, MYSQL_TYPE_SHORT, false)
+    MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(uint16_t, MYSQL_TYPE_SHORT, true)
+    MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(int32_t, MYSQL_TYPE_LONG, false)
+    MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(uint32_t, MYSQL_TYPE_LONG, true)
+    MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(int64_t, MYSQL_TYPE_LONGLONG, false)
+    MYSQL_BINDER_INTERGAL_TYPE_SPECIALIZATION(uint64_t, MYSQL_TYPE_LONGLONG, true)
 
-    #define BINDER_FLOATING_TYPE_SPECIALIZATION(type, mysql_type, size) \
+    #define MYSQL_BINDER_FLOATING_TYPE_SPECIALIZATION(type, mysql_type) \
     template <size_t N, typename... Args> \
     class Binder<MYSQL_BIND, N, type, Args...> \
     {\
     public:\
         static void BIND(vector<MYSQL_BIND>* const binds, const type& value, const Args&... args) \
         {\
+            if(binds->size() <= N) \
+            { \
+                binds->push_back(MYSQL_BIND()); \
+            } \
             MYSQL_BIND &parameter = binds->at(N); \
             memset(&parameter, 0, sizeof(MYSQL_BIND)); \
             parameter.buffer_type = mysql_type; \
@@ -112,8 +124,8 @@ namespace ODBC
         }\
     };
 
-    BINDER_FLOATING_TYPE_SPECIALIZATION(float, MYSQL_TYPE_FLOAT, sizeof(float))
-    BINDER_FLOATING_TYPE_SPECIALIZATION(double, MYSQL_TYPE_DOUBLE, sizeof(double))
+    MYSQL_BINDER_FLOATING_TYPE_SPECIALIZATION(float, MYSQL_TYPE_FLOAT)
+    MYSQL_BINDER_FLOATING_TYPE_SPECIALIZATION(double, MYSQL_TYPE_DOUBLE)
 
     class MySQLBind
     {

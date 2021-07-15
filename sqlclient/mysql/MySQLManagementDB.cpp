@@ -9,10 +9,10 @@ list<SQLManagement> MySQLManagementDB::MANAGEMENTS;
 
 typedef tuple<string, float> _Tuple;
 
-MySQLManagementDB::MySQLManagementDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name)
-                  :SQLManagementDB(server_ip, server_port, user_name, user_password, database_name)
+MySQLManagementDB::MySQLManagementDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error)
+                  :SQLManagementDB(server_ip, server_port, user_name, user_password, database_name, error)
 {
-    this->db = new MySQLClient(server_ip, server_port, user_name, user_password, database_name);
+    this->db = new MySQLClient(server_ip, server_port, user_name, user_password, database_name, error);
 }
 
 MySQLManagementDB::MySQLManagementDB(MySQLClient *db)
@@ -36,11 +36,6 @@ MySQLManagementDB::~MySQLManagementDB()
 
 void MySQLManagementDB::init()
 {
-    this->db->set_error([](SQLException e)
-    {
-        cout << "ERROR: " << e.what() << endl;
-    });
-
     if(!MySQLManagementDB::MUTEX_IS_INIT)
     {
         MySQLManagementDB::MUTEX_IS_INIT = true;
@@ -94,6 +89,7 @@ void MySQLManagementDB::init()
 bool MySQLManagementDB::check(string name)
 {
     bool ret = true;
+    name = this->db->escape_string(name);
     shared_ptr<MySQLResult> reader = this->db->select(TABLE,
                                                     NAME + " , " + VERSION,
                                                     NAME + " = ?",
@@ -103,7 +99,7 @@ bool MySQLManagementDB::check(string name)
                                                     "",
                                                     [&](MySQLBind *bind)
                                                     {
-                                                        bind->bind_param(this->db->escape_string(name));
+                                                        bind->bind_param(name);
                                                     });
     if(reader != nullptr)
     {
@@ -117,7 +113,7 @@ bool MySQLManagementDB::check(string name)
 uint64_t MySQLManagementDB::add(SQLManagement management)
 {
     uint64_t ret = 0;
-    string name = string(management.getName());
+    string name = this->db->escape_string(management.getName());
     float version = management.getVersion();
 
     if(check(management.getName()))
@@ -127,7 +123,7 @@ uint64_t MySQLManagementDB::add(SQLManagement management)
                                 "? , ?",
                                 [&](MySQLBind *bind)
                                 {
-                                    bind->bind_param(this->db->escape_string(name), version);
+                                    bind->bind_param(name, version);
                                 });
     }
     return ret;
@@ -136,7 +132,7 @@ uint64_t MySQLManagementDB::add(SQLManagement management)
 uint64_t MySQLManagementDB::update(SQLManagement management)
 {
     uint64_t ret = 0;
-    string name = string(management.getName());
+    string name = this->db->escape_string(management.getName());
     float version = management.getVersion();
 
     ret = this->db->update(TABLE,
@@ -144,7 +140,7 @@ uint64_t MySQLManagementDB::update(SQLManagement management)
                             NAME + " = ?",
                             [&](MySQLBind *bind)
                             {
-                                bind->bind_param(version, this->db->escape_string(name));
+                                bind->bind_param(version, name);
                             });
     return ret;
 }
@@ -152,11 +148,12 @@ uint64_t MySQLManagementDB::update(SQLManagement management)
 uint64_t MySQLManagementDB::remove(string name)
 {
     uint64_t ret = 0;
+    name = this->db->escape_string(name);
     ret = this->db->remove(TABLE,
                             NAME + " = ?",
                             [&](MySQLBind *bind)
                             {
-                                bind->bind_param(this->db->escape_string(name));
+                                bind->bind_param(name);
                             });
     return ret;
 }
@@ -164,6 +161,7 @@ uint64_t MySQLManagementDB::remove(string name)
 SQLManagement MySQLManagementDB::get(string name)
 {
     SQLManagement ret("", MySQLManagementDB::ERROR_VERSION);
+    name = this->db->escape_string(name);
     shared_ptr<MySQLResult> reader = this->db->select(TABLE,
                                                     NAME + " , " + VERSION,
                                                     NAME + " = ?",
@@ -173,7 +171,7 @@ SQLManagement MySQLManagementDB::get(string name)
                                                     "",
                                                     [&](MySQLBind *bind)
                                                     {
-                                                        bind->bind_param(this->db->escape_string(name));
+                                                        bind->bind_param(name);
                                                     });
     if(reader != nullptr)
     {

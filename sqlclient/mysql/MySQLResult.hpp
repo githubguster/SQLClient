@@ -12,13 +12,13 @@
 #include <cstring>
 #include <cstdint>
 #include <boost/lexical_cast.hpp>
-#include <mysql/mysql.h>
 #include <vector>
 #include <tuple>
 #include <utility>
 #include <type_traits>
 #include <memory>
 #include <functional>
+#include <mysql/mysql.h>
 
 using namespace std;
 
@@ -28,7 +28,7 @@ namespace ODBC
     class ParameterSetter<MYSQL_BIND, T>
     {
     public:
-        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, my_bool* const is_null_flag)
+        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, bool* const is_null_flag)
         {
             memset(bind, 0, sizeof(MYSQL_BIND));
             if(buffer->size() <= 0)
@@ -48,7 +48,7 @@ namespace ODBC
     class ParameterSetter<MYSQL_BIND, shared_ptr<T>>
     {
     public:
-        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, my_bool* const is_null_flag)
+        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, bool* const is_null_flag)
         {
             ParameterSetter<MYSQL_BIND, T>::SetParameter(bind, buffer, is_null_flag);
         }
@@ -58,7 +58,7 @@ namespace ODBC
     class ParameterSetter<MYSQL_BIND, unique_ptr<T>>
     {
     public:
-        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, my_bool* const is_null_flag)
+        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, bool* const is_null_flag)
         {
             ParameterSetter<MYSQL_BIND, T>::SetParameter(bind, buffer, is_null_flag);
         }
@@ -68,17 +68,17 @@ namespace ODBC
     class ParameterSetter<MYSQL_BIND, T*>
     {
     public:
-        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, my_bool* const is_null_flag)
+        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, bool* const is_null_flag)
         {
         }
     };
 
-    #define BINDER_PARAMETER_SETTER_SECIALIZATION(type, mysql_type, is_unsigned_type) \
+    #define MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(type, mysql_type, is_unsigned_type) \
     template<> \
     class ParameterSetter<MYSQL_BIND, type> \
     {\
     public:\
-        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, my_bool* const is_null_flag) \
+        static void SetParameter(MYSQL_BIND* const bind, vector<char> * const buffer, bool* const is_null_flag) \
         {\
             memset(bind, 0, sizeof(MYSQL_BIND));\
             buffer->resize(sizeof(type));\
@@ -89,16 +89,16 @@ namespace ODBC
         }\
     };
 
-    BINDER_PARAMETER_SETTER_SECIALIZATION(int8_t, MYSQL_TYPE_TINY, false)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(uint8_t, MYSQL_TYPE_TINY, true)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(int16_t, MYSQL_TYPE_SHORT, false)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(uint16_t, MYSQL_TYPE_SHORT, true)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(int32_t, MYSQL_TYPE_LONG, false)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(uint32_t, MYSQL_TYPE_LONG, true)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(int64_t, MYSQL_TYPE_LONGLONG, false)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(uint64_t, MYSQL_TYPE_LONGLONG, true)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(float, MYSQL_TYPE_FLOAT, false)
-    BINDER_PARAMETER_SETTER_SECIALIZATION(double, MYSQL_TYPE_DOUBLE, false)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(int8_t, MYSQL_TYPE_TINY, false)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(uint8_t, MYSQL_TYPE_TINY, true)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(int16_t, MYSQL_TYPE_SHORT, false)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(uint16_t, MYSQL_TYPE_SHORT, true)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(int32_t, MYSQL_TYPE_LONG, false)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(uint32_t, MYSQL_TYPE_LONG, true)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(int64_t, MYSQL_TYPE_LONGLONG, false)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(uint64_t, MYSQL_TYPE_LONGLONG, true)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(float, MYSQL_TYPE_FLOAT, false)
+    MYSQL_BINDER_PARAMETER_SETTER_SECIALIZATION(double, MYSQL_TYPE_DOUBLE, false)
 
     template<typename T>
     class ResultSetter<MYSQL_BIND, T>
@@ -177,7 +177,7 @@ namespace ODBC
         }
     };
 
-    #define BINDER_ELEMENT_SETTER_SPECIALIZATION(type) \
+    #define MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(type) \
     template<>\
     class ResultSetter<MYSQL_BIND, type>\
     {\
@@ -195,18 +195,16 @@ namespace ODBC
         }\
     };
 
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(int8_t)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(uint8_t)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(int16_t)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(uint16_t)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(int32_t)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(uint32_t)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(int64_t)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(uint64_t)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(float)
-    BINDER_ELEMENT_SETTER_SPECIALIZATION(double)
-
-    template<int I> struct ResultCount {};
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(int8_t)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(uint8_t)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(int16_t)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(uint16_t)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(int32_t)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(uint32_t)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(int64_t)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(uint64_t)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(float)
+    MYSQL_BINDER_ELEMENT_SETTER_SPECIALIZATION(double)
 
     //typedef typename remove_reference<decltype(*declval<typename remove_reference<decltype(declval<MYSQL_BIND>().length)>::type>())>::type mysql_bind_length_t;
 
@@ -217,13 +215,16 @@ namespace ODBC
         bool is_free_stmt;
     private:
         template<typename T, int C>
-        void bindParameters(const T& type, vector<MYSQL_BIND>* const binds, vector<vector<char>>* const buffers, vector<my_bool>* const null_flags, ResultCount<C>) 
+        void bindParameters(const T& type, vector<MYSQL_BIND>* const binds, vector<vector<char>>* const buffers, vector<bool>* const null_flags, ResultCount<C>) 
         {
-            ParameterSetter<MYSQL_BIND, typename tuple_element<C, T>::type>::SetParameter(&binds->at(C), &buffers->at(C), &null_flags->at(C));
+            bool *is_null_flags = new bool();
+            ParameterSetter<MYSQL_BIND, typename tuple_element<C, T>::type>::SetParameter(&binds->at(C), &buffers->at(C), is_null_flags);
+            null_flags->at(C) = *is_null_flags;
+            delete is_null_flags;
             bindParameters(type, binds, buffers, null_flags, ResultCount<C - 1>());
         }
         template<typename T>
-        void bindParameters(const T& type, vector<MYSQL_BIND>* const binds, vector<vector<char>>* const buffers, vector<my_bool>* const null_flags, ResultCount<-1>) {}
+        void bindParameters(const T& type, vector<MYSQL_BIND>* const binds, vector<vector<char>>* const buffers, vector<bool>* const null_flags, ResultCount<-1>) {}
         template<typename T, int C>
         void setResult(T *const type, const vector<MYSQL_BIND>& binds, ResultCount<C>)
         {
@@ -235,7 +236,7 @@ namespace ODBC
         void refetch(vector<MYSQL_BIND>* const binds, vector<vector<char>>* const buffers, vector<uint64_t>* const lengths)
         {
             vector<tuple<uint32_t, uint64_t>> columns;
-            for (size_t count = 0; count < lengths->size(); ++count) 
+            for (size_t count = 0; count < lengths->size(); count++) 
             {
                 vector<char>& buffer = buffers->at(count);
                 const size_t length = lengths->at(count);
@@ -300,14 +301,15 @@ namespace ODBC
         {
             size_t ret = 0;
             size_t field = this->getField();
+            size_t paramter = this->getParamter();
             
             vector<MYSQL_BIND> binds(field);
             vector<vector<char>> buffers(field);
             vector<uint64_t> lengths(field);
-            vector<my_bool> null_floats(field);
+            vector<bool> null_flags(field);
 
             tuple<Args...> unsed;
-            bindParameters(unsed, &binds, &buffers, &null_floats, ResultCount<sizeof...(Args) - 1>());
+            bindParameters(unsed, &binds, &buffers, &null_flags, ResultCount<sizeof...(Args) - 1>());
 
             for(size_t count = 0; count < field; count++)
             {
@@ -331,6 +333,10 @@ namespace ODBC
                 ret++;
                 fetch_status = mysql_stmt_fetch(this->stmt);
             }
+            binds.clear();
+            buffers.clear();
+            lengths.clear();
+            null_flags.clear();            
             return ret;
         }
     };

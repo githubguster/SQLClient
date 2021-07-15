@@ -1,14 +1,15 @@
-#ifndef __USER_DB__
-#define __USER_DB__
+#ifndef __POSTGRESQL_USER_DB__
+#define __POSTGRESQL_USER_DB__
+#ifdef ENABLE_POSTGRESQL
 
 #include <iostream>
 #include <string>
 #include <vector>
-#include "mysql/MySQLManagementDB.hpp"
+#include "postgresql/PostgreSQLManagementDB.hpp"
 
 using namespace ODBC;
 
-namespace Test
+namespace Test_PostgreSQL
 {
     class User
     {
@@ -28,7 +29,7 @@ namespace Test
         }
     };
 
-    class UserDB : public MySQLManagementDB
+    class UserDB : public PostgreManagementDB
     {
     public:
         static const string TABLE;
@@ -38,8 +39,8 @@ namespace Test
         static const string CREATE_TABLE;
         static const float VERSION;
     public:
-        UserDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name);
-        UserDB(MySQLClient *db);
+        UserDB(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error = nullptr);
+        UserDB(PostgreSQLClient *db);
         ~UserDB();
 
         uint64_t add(User user);
@@ -54,5 +55,5 @@ namespace Test
     };
 }
 
-
+#endif
 #endif
