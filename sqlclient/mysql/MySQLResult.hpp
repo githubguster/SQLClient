@@ -285,8 +285,11 @@ namespace ODBC
         {
             if(this->is_free_stmt)
             {
-                mysql_stmt_free_result(this->stmt);
-                mysql_stmt_close(this->stmt);
+                if(this->stmt != nullptr)
+                {
+                    mysql_stmt_free_result(this->stmt);
+                    mysql_stmt_close(this->stmt);
+                }
             }
             this->is_free_stmt = false;
             this->stmt = nullptr;

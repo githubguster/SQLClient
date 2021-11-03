@@ -20,7 +20,7 @@
 #include <memory>
 #include <functional>
 #include <postgresql/libpq-fe.h>
-#include "PostgresSQLDataConvert.hpp"
+#include "PostgreSQLDataConvert.hpp"
 
 namespace ODBC
 {

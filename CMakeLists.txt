@@ -7,10 +7,12 @@ add_subdirectory(sqlclient)
 
 set(PROJECT_NAME_INCLUDE_FILES 
     test/MySQLUserDB.hpp
-    test/PostgreSQLUserDB.hpp)
+    test/PostgreSQLUserDB.hpp
+    test/SQLiteUserDB.hpp)
 set(PROJECT_NAME_SOURCE_FILES 
     test/MySQLUserDB.cpp
     test/PostgreSQLUserDB.cpp
+    test/SQLiteUserDB.cpp
     test/main.cpp)
 
 add_executable(${PROJECT_NAME} ${PROJECT_NAME_INCLUDE_FILES} ${PROJECT_NAME_SOURCE_FILES})
@@ -23,4 +25,8 @@ endif()
 
 if(ENABLE_POSTGRESQL_SQL_CLIENT)
     target_link_libraries(${PROJECT_NAME} POSTGRESQL_CLIENT_LIBRARY)
+endif()
+
+if(ENABLE_SQLITE_SQL_CLIENT)
+    target_link_libraries(${PROJECT_NAME} SQLITE_CLIENT_LIBRARY)
 endif()

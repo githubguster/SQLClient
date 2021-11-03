@@ -1,6 +1,7 @@
 #include <iostream>
 #include "MySQLUserDB.hpp"
 #include "PostgreSQLUserDB.hpp"
+#include "SQLiteUserDB.hpp"
 
 using namespace std;
 
@@ -8,11 +9,12 @@ typedef  enum _DATABASE_TYPE
 {
     DATABASE_TYPE_MYSQL = 0,
     DATABASE_TYPE_POSTGRESQL,
+    DATABASE_TYPE_SQLITESQL,
 } DATABASE_TYPE;
 
 static void show_help(string program)
 {
-    cout << program << " [-H server ip] [-P server port] [-u username] [-p password] [-D database] [-T 0|1 (mysql|postgresql)]" << endl;
+    cout << program << " [-H server ip] [-P server port] [-u username] [-p password] [-D database] [-T 0|1|2 (mysql|postgresql|sqlite)]" << endl;
     exit(0);
 }
 
@@ -58,7 +60,11 @@ int main(int argc, char const *argv[])
 
     if(username.empty() || userpassword.empty() || db.empty())
     {
-        show_help(argv[0]);
+        if(dbtype == DATABASE_TYPE_SQLITESQL && db.empty() ||
+           dbtype != DATABASE_TYPE_SQLITESQL)
+        {
+            show_help(argv[0]);
+        }
     }
 
     #ifdef ENABLE_MYSQL
@@ -125,6 +131,40 @@ int main(int argc, char const *argv[])
         cout << "DROP" << endl;
         delete postgresql;
     }
-    return 0;
     #endif
+
+    #ifdef ENABLE_SQLITE
+    if(dbtype == DATABASE_TYPE_SQLITESQL)
+    {
+        Test_SQLiteSQL::UserDB *sqlite = new Test_SQLiteSQL::UserDB(db, [&](SQLException e) {
+            cout << "SQLite ERROR: " << e.what() << endl;
+        });
+
+        sqlite->add(Test_SQLiteSQL::User(0, "USER1"));
+        vector<Test_SQLiteSQL::User> users = sqlite->getAll();
+
+        cout << "NEW" << endl;
+        for (size_t count = 0; count < users.size(); ++count)
+        {
+            Test_SQLiteSQL::User user = users.at(count);
+            cout << user << endl;
+            sqlite->update(Test_SQLiteSQL::User(user.getId(), user.getAccount() + "_update"));
+        }
+        users.clear();
+        users = sqlite->getAll();
+        cout << "UPDATE" << endl;
+        for (size_t count = 0; count < users.size(); ++count)
+        {
+            Test_SQLiteSQL::User user = users.at(count);
+            cout << user << endl;
+            sqlite->remove(user);
+        }
+        cout << "DELETE" << endl;
+        sqlite->drop();
+        cout << "DROP" << endl;
+        delete sqlite;
+    }
+    #endif
+
+    return 0;
 }

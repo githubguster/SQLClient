@@ -1,44 +1,42 @@
 /**
  * author: guster
- * date: 2021/07/07
- * description: postgresql client
- * reference: https://zetcode.com/db/postgresqlc/
+ * date: 2021/06/26
+ * description: mssql client
  */
 
-#ifndef __POSTGRE_SQL_CLIENT__
-#define __POSTGRE_SQL_CLIENT__
+#ifndef __MS_SQL_CLIENT__
+#define __MS_SQL_CLIENT__
 
 #include <iostream>
 #include <string>
 #include <cstring>
 #include <vector>
 #include <tuple>
-#include <netinet/in.h>
-#include <postgresql/libpq-fe.h>
+#include <sql.h>
 #include "SQLClient.hpp"
-#include "PostgreSQLDataConvert.hpp"
-#include "PostgreSQLBind.hpp"
-#include "PostgreSQLResult.hpp"
+#include "MsSQLBind.hpp"
+#include "MsSQLResult.hpp"
 
 using namespace std;
 
 namespace ODBC
 {
-    class PostgreSQLClient : public SQLClient<shared_ptr<PostgreSQLResult>, PostgreSQLBind*>
+    class MsSQLClient : public SQLClient<shared_ptr<MsSQLResult>, MsSQLBind*>
     {
     private:
-        PGconn *postgresql;
+        SQLHDBC mssql;
+        bool connected;
     public:
-        PostgreSQLClient(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error = nullptr);
-        ~PostgreSQLClient();
+        MsSQLClient(string server_ip, uint16_t server_port, string user_name, string user_password, string database_name, SQLError error = nullptr);
+        ~MsSQLClient();
 
         bool open();
         bool open(string source);
         bool close();
         bool isOpen();
-        shared_ptr<PostgreSQLResult> read(string sql, PrepareStatement command = nullptr);
+        shared_ptr<MsSQLResult> read(string sql, PrepareStatement command = nullptr);
         uint64_t query(string sql, PrepareStatement command = nullptr);
-        shared_ptr<PostgreSQLResult> select(string table, string columns, string wheres, string order, string group, string having, string limit, PrepareStatement command = nullptr);
+        shared_ptr<MsSQLResult> select(string table, string columns, string wheres, string order, string group, string having, string limit, PrepareStatement command = nullptr);
         uint64_t update(string table, string values, string wheres, PrepareStatement command = nullptr);
         uint64_t insert(string table, string columns, string values, PrepareStatement command = nullptr);
         uint64_t remove(string table, string wheres, PrepareStatement command = nullptr);

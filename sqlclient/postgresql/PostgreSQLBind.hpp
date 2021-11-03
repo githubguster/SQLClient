@@ -18,8 +18,8 @@
 
 namespace ODBC
 {
-    #define POSTGRESQL_BIN_TYPE_STRING 0
-    #define POSTGRESQL_BIN_TYPE_BINARY 1
+    #define POSTGRESQL_BIND_TYPE_STRING 0
+    #define POSTGRESQL_BIND_TYPE_BINARY 1
 
     typedef struct POSTGRESQL_BIND
     {
@@ -58,7 +58,7 @@ namespace ODBC
             parameter.oid = 0;
             parameter.param = static_cast<const char *>(const_cast<void *>(static_cast<const void *>(value)));
             parameter.length = strlen(value);
-            parameter.format = POSTGRESQL_BIN_TYPE_STRING;
+            parameter.format = POSTGRESQL_BIND_TYPE_STRING;
             Binder<POSTGRESQL_BIND, N + 1, Args...>::BIND(binds, args...);
         }
     };
@@ -101,7 +101,7 @@ namespace ODBC
             parameter.oid = postgresql_type; \
             parameter.param =  static_cast<const char *>(const_cast<void *>(static_cast<const void *>(&value))); \
             parameter.length = sizeof(value); \
-            parameter.format = POSTGRESQL_BIN_TYPE_BINARY; \
+            parameter.format = POSTGRESQL_BIND_TYPE_BINARY; \
             Binder<POSTGRESQL_BIND, N + 1, Args...>::BIND(binds, args...);\
         }\
     };
@@ -133,7 +133,7 @@ namespace ODBC
             parameter.oid = postgresql_type; \
             parameter.param =  static_cast<const char *>(const_cast<void *>(static_cast<const void *>(&value))); \
             parameter.length = sizeof(value); \
-            parameter.format = POSTGRESQL_BIN_TYPE_BINARY; \
+            parameter.format = POSTGRESQL_BIND_TYPE_BINARY; \
             Binder<POSTGRESQL_BIND, N + 1, Args...>::BIND(binds, args...);\
         }\
     };
